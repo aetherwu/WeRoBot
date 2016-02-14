@@ -26,7 +26,7 @@ _DEFAULT_CONFIG = dict(
 
 class BaseRoBot(object):
     message_types = ['subscribe', 'unsubscribe', 'click',  'view',  # event
-                     'text', 'image', 'link', 'location', 'voice']
+                     'text', 'image', 'link', 'location', 'voice', 'events', 'event', 'unknown', 'scan']
 
     token = ConfigAttribute("TOKEN")
     session_storage = ConfigAttribute("SESSION_STORAGE")
@@ -34,7 +34,8 @@ class BaseRoBot(object):
     def __init__(self, token=None, logger=None, enable_session=True,
                  session_storage=None):
         self.config = Config(_DEFAULT_CONFIG)
-        self._handlers = dict((k, []) for k in self.message_types)
+        self._handlers = dict((k, []) 
+                    for k in self.message_types)
         self._handlers['all'] = []
         if logger is None:
             import werobot.logger
@@ -57,13 +58,34 @@ class BaseRoBot(object):
         Decorator to add a handler function for every messages
         """
         self.add_handler(f, type='all')
+        return f    
+
+    def unknown(self, f):
+        """
+        Decorator to add a handler function for ``unknown`` messages
+        """
+        self.add_handler(f, type='unknown')
         return f
+    
+    def scan(self, f):
+        """
+        Decorator to add a handler function for ``scan`` messages
+        """
+        self.add_handler(f, type='scan')
+        return f  
 
     def text(self, f):
         """
         Decorator to add a handler function for ``text`` messages
         """
         self.add_handler(f, type='text')
+        return f        
+        
+    def events(self, f):
+        """
+        Decorator to add a handler function for ``events`` messages
+        """
+        self.add_handler(f, type='events')
         return f
 
     def image(self, f):
@@ -203,7 +225,7 @@ class BaseRoBot(object):
         if session_storage and hasattr(message, "source"):
             id = to_binary(message.source)
             session = session_storage[id]
-
+        
         handlers = self.get_handlers(message.type)
         try:
             for handler, args_count in handlers:
@@ -277,6 +299,7 @@ class WeRoBot(BaseRoBot):
             body = request.body.read()
             message = parse_user_msg(body)
             logging.info("Receive message %s" % message)
+            
             reply = self.get_reply(message)
             if not reply:
                 self.logger.warning("No handler responded message %s"

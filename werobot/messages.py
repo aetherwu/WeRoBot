@@ -18,7 +18,6 @@ class WeChatMessage(object):
         self.time = int(message.get('CreateTime', 0))
         self.__dict__.update(message)
 
-
 @handle_for_type("text")
 class TextMessage(WeChatMessage):
     def __init__(self, message):
@@ -52,6 +51,12 @@ class LinkMessage(WeChatMessage):
         self.url = message.pop('Url')
         super(LinkMessage, self).__init__(message)
 
+@handle_for_type("scan")
+class ScanMessage(WeChatMessage):
+    def __init__(self, message):
+        self.key = message.pop('EventKey')
+        super(ScanMessage, self).__init__(message)
+
 
 @handle_for_type("event")
 class EventMessage(WeChatMessage):
@@ -64,6 +69,14 @@ class EventMessage(WeChatMessage):
             self.latitude = float(message.pop("Latitude"))
             self.longitude = float(message.pop("Longitude"))
             self.precision = float(message.pop("Precision"))
+        elif self.type == "scan":
+            self.key = message.pop('EventKey')
+        elif self.type == "view":
+            self.url = message.pop('EventKey')
+            self.menuid = message.pop('MenuId')
+        else:
+            self.type = 'unknown'
+
         super(EventMessage, self).__init__(message)
 
 
