@@ -32,6 +32,8 @@ class Client(object):
         self.appsecret = appsecret
         self._token = None
         self.token_expires_at = None
+        self._jsticket = None
+        self.jsticket_expires_at = None
 
     def request(self, method, url, **kwargs):
         if "params" not in kwargs:
@@ -80,7 +82,35 @@ class Client(object):
                 "secret": self.appsecret
             }
         )
+     
 
+    def generate_jsticket(self):
+        """
+        获取 js_ticket。
+        详情请参考 http://mp.weixin.qq.com/wiki/index.php?title=通用接口文档
+
+        :return: 返回的 JSON 数据包
+        """
+        return self.get(
+            url="https://api.weixin.qq.com/cgi-bin/ticket/getticket",
+            params={
+                "access_token": self.token,
+                "type": 'jsapi'
+            }
+        )
+    
+    @property
+    def jsticket(self):
+        if self._jsticket:
+            now = time.time()
+            if self.jsticket_expires_at - now > 60:
+                return self._jsticket
+        json = self.generate_jsticket()
+        self._jsticket = json["ticket"]
+        self.jsticket_expires_at = int(time.time()) + json["expires_in"]
+        return self._jsticket
+
+           
     @property
     def token(self):
         if self._token:
