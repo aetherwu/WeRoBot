@@ -23,7 +23,11 @@ class TextMessage(WeChatMessage):
     def __init__(self, message):
         self.content = message.pop("Content")
         super(TextMessage, self).__init__(message)
-
+    
+@handle_for_type("unsubscribe")
+class UnSubscribeMessage(WeChatMessage):
+    def __init__(self, message):
+        super(UnSubscribeMessage, self).__init__(message)    
 
 @handle_for_type("image")
 class ImageMessage(WeChatMessage):
@@ -74,6 +78,10 @@ class EventMessage(WeChatMessage):
         elif self.type == "view":
             self.url = message.pop('EventKey')
             self.menuid = message.pop('MenuId')
+        elif self.type == "subscribe":
+            self.key = message.pop('EventKey')
+        elif self.type == "unsubscribe":
+            self.key = message.pop('EventKey')
         else:
             self.type = 'unknown'
 
